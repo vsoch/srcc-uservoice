@@ -1,0 +1,2 @@
+git+https://github.com/vsoch/uservoice-python.git@add/requests-get-params
+requests
