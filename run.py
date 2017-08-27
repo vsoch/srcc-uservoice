@@ -6,7 +6,11 @@ to look at UserVoice data logs for research computing
 '''
 
 from api import SRCC
-from utils import write_json
+from utils import (
+    write_json,
+    get_custom_field
+)
+
 import pandas
 import datetime
 import os
@@ -22,17 +26,32 @@ tickets = srcc.get_tickets()
 today = datetime.datetime.today().strftime('%Y-%m-%d')
 if not os.path.exists('data'):
     os.mkdir('data')
-    write_json(tickets,'data/tickets-%s.json' %today)
+    write_json(tickets,'data/tickets-%s_raw.json' %today)
 
-# How many tickets per user?
-counts = pandas.DataFrame(columns=['count'])
+# Extract Features
+# We are only going to use the first message, as we assume this
+# is the main/first attempt to summarize the problem
+columns = ['id','message','user','ticket_number','subject', 'cluster']
+df = pandas.DataFrame(columns=columns)
 for ticket in tickets:
-    user = ticket['created_by']['email']
-    if user in counts.index.tolist():
-        counts.loc[user,'count'] +=1
-    else:
-        counts.loc[user,'count'] = 1
+    uid = ticket['id']
+    message = ticket['messages'][0]['body']
+    ticket_number = ticket['ticket_number']
+    cf = ticket['custom_fields']
+    cluster = get_custom_field(cf,'System')[0]
+    subject = ticket['subject']
+    user = ticket['contact'].get('email',None)
+    if user is None:
+        user = ticket['created_by']['email']
+    df.loc[uid] = [uid, message, user, ticket_number, subject, cluster]
 
+count=dict()
+for ticket in tickets:
+    uid = ticket['id']
+    if uid in count:
+        count[uid] +=1
+    else:
+        count[uid] = 1
 
 # Let's just save tickets text content for classification
 text = []

@@ -53,6 +53,8 @@ class SRCC:
         done = False   # handle pagination
         results = []
         page = 1
+        if 'page' in params:
+            page = params['page']
         count = 0
         api_url = "/api/%s/%s.json" %(api_version,url)
 
@@ -60,6 +62,7 @@ class SRCC:
         while done == False:
 
             print('Retrieving page %s' %(page))
+            params['page'] = page
             res = self.client.get(api_url, params)
             results = results + res[url]
 
