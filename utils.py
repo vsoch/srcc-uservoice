@@ -7,6 +7,7 @@ logs for research computing
 
 import os
 import simplejson
+import json
 from gvars import *
 
 # General util / file functions

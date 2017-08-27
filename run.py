@@ -8,6 +8,7 @@ to look at UserVoice data logs for research computing
 from api import SRCC
 from utils import write_json
 import pandas
+import datetime
 import os
 
 # Create the client
@@ -18,9 +19,10 @@ print("Using srcc client to obtain tickets...")
 tickets = srcc.get_tickets()
 
 # Save data
+today = datetime.datetime.today().strftime('%Y-%m-%d')
 if not os.path.exists('data'):
     os.mkdir('data')
-    write_json(tickets,'data/tickets.json')
+    write_json(tickets,'data/tickets-%s.json' %today)
 
 # How many tickets per user?
 counts = pandas.DataFrame(columns=['count'])
