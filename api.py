@@ -46,8 +46,14 @@ class SRCC:
     def get(self, endpoint, page=1, per_page=500, filter="all", sort="newest", state="closed"):
         '''get is a general function for a get call to the api at some url, 
         using some params
-        :param url: the url to post to
-        :param params: the parameters to use
+
+        Parameters
+        ==========
+        :param endpoint: the url endpoint (eg, tickets)
+        :param page: starting page
+        :param per_page: results per page
+        :param filter: filter for results
+        :param sort: sort results by
         '''
 
         done = False   # handle pagination
@@ -67,26 +73,26 @@ class SRCC:
             url += '&state=' + state
             url += '&filter=' + filter
 
-
             print('Retrieving page %s' %(page))
             print(url)
 
             res = requests.get(url, 
                                headers=self.client.default_headers, 
-                               auth=self.client.oauth).json()
+                               auth=self.client.oauth)
 
-            results = results + res[endpoint]
+            if res.status_code == 200:
+                res = res.json()
+                results = results + res[endpoint]
+                count = count + len(res[endpoint])
+                total = res['response_data'].get('records',res['response_data'].get('total_records'))
 
-            # Update the count
-            count = count + len(res[endpoint])
- 
-            # Should we keep going?
-            total = res['response_data'].get('records',res['response_data'].get('total_records'))
-
-            if count < total:
-                page = page + 1
+                # Should we keep going?
+                if count < total:
+                    page = page + 1
+                else:
+                    done = True
             else:
-                done = True
+                print('Error with page %s:%s' %(page,url))
 
 
         return results
