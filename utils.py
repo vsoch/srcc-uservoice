@@ -26,22 +26,29 @@ def write_json(json_obj,filename,mode="w",print_pretty=True):
     :param filename: the output file to write to
     :param pretty_print: if True, will use nicer formatting   
     '''
-    filey = open(filename,mode)
-    if print_pretty == True:
-        filey.writelines(simplejson.dumps(json_obj, indent=4, separators=(',', ': ')))
-    else:
-        filey.writelines(simplejson.dumps(json_obj))
-    filey.close()
+    with open(filename,mode) as filey:
+        if print_pretty == True:
+            filey.writelines(json.dumps(json_obj, indent=4, separators=(',', ': ')))
+        else:
+            filey.writelines(json.dumps(json_obj))
     return filename
 
 
-def read_file(filename,mode="rb"):
+def read_json(filename,mode='r'):
+    '''read_json reads in a json file and returns
+    the data structure as dict.
+    '''
+    with open(filename,mode) as filey:
+        data = json.load(filey)
+    return data
+
+
+def read_file(filename,mode="r"):
     '''write_file will open a file, "filename" and write content, "content"
     and properly close the file
     '''
-    filey = open(filename,mode)
-    content = filey.readlines()
-    filey.close()
+    with open(filename,mode) as filey:
+        content = filey.read()
     return content
 
 

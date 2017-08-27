@@ -16,7 +16,6 @@ from gvars import *
 class SRCC:
 
     def __init__(self,api_key=None,api_secret=None,sub_domain=None):
-
         self.client = self.authenticate(api_key=api_key,
                                         api_secret=api_secret,
                                         sub_domain=sub_domain)
@@ -39,7 +38,7 @@ class SRCC:
         if api_key == None:
             if os.path.exists('.secrets'):
                 auth = read_file(".secrets")
-                api_key,api_secret = [x.strip('\n').strip(' ') for x in auth]
+                api_key,api_secret = [x.strip(' ') for x in auth.split('\n') if x]
 
         return uservoice.Client(sub_domain, api_key, api_secret)    
 
@@ -123,13 +122,24 @@ class SRCC:
         return articles
 
 
-    def get_tickets(self,per_page=500,filter="all",sort="newest",states=['open','closed']):
+    def get_tickets(self,per_page=500,filter="all",sort="newest",get_open=True,get_closed=True):
         '''get_tickets will return a list of tickets 
         :param per_page: the number of articles to return per page (default 500)
         :param filter: either all [default], published, or unpublished
         :param sort: sort by newest, oldest, instant_answers
-        :param states: list of states to parse through (open,closed,spam)
+        :param get_open: retrieve open (open,closed,spam)
+        :param get_closed: retrieve closed
         '''
+        states = []
+        if get_closed:
+            states.append('closed')
+        if get_open:
+            states.append('open')
+
+        if len(states) == 0:
+            bot.error("You must specify one or more states, open or closed.")
+            sys.exit(1)
+ 
         tickets = []
         for state in states:
             params = {'sort': sort,
