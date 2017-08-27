@@ -43,7 +43,7 @@ class SRCC:
         return uservoice.Client(sub_domain, api_key, api_secret)    
 
 
-    def get(self,url,params):
+    def get(self, endpoint, page=1, per_page=500, filter="all", sort="newest", state="closed"):
         '''get is a general function for a get call to the api at some url, 
         using some params
         :param url: the url to post to
@@ -52,43 +52,42 @@ class SRCC:
 
         done = False   # handle pagination
         results = []
-        page = 1
-        if 'page' in params:
-            page = params['page']
+
         count = 0
-        api_url = "/api/%s/%s.json" %(api_version,url)
+        api_url = "/api/%s/%s.json" %(api_version,endpoint)
 
         # Loop through calls until we have no more
         while done == False:
 
+            url = self.client.api_url + api_url
+            url += '?client=' + self.client.api_key
+            url += '&page=' + str(page)
+            url += '&per_page=' + str(per_page)
+            url += '&sort=' + sort
+            url += '&state=' + state
+            url += '&filter=' + filter
+
+
             print('Retrieving page %s' %(page))
-            params['page'] = page
-            res = self.client.get(api_url, params)
-            results = results + res[url]
+            print(url)
+
+            res = requests.get(url, 
+                               headers=self.client.default_headers, 
+                               auth=self.client.oauth).json()
+
+            results = results + res[endpoint]
 
             # Update the count
-            count = count + len(res[url])
+            count = count + len(res[endpoint])
  
-            # Some calls just have 'records' as key...
-            if 'records' in res['response_data']:
-                if res['response_data']['records'] != page:
-                    page = page + 1
-                else:
-                    done = True
- 
-            # Others have total records...
-            elif 'total_records' in res['response_data']:
-                if count < res['response_data']['total_records']:
-                    page = page + 1
-                else:
-                    done = True
+            # Should we keep going?
+            total = res['response_data'].get('records',res['response_data'].get('total_records'))
 
-            # If we get here, the API is so inconsistent in return fields,
-            # it's just safest to stop.
+            if count < total:
+                page = page + 1
             else:
-                print("Not clear if more records remain, stopping.")
-                print("\n".join(res["response_data"].keys()))
                 done = True
+
 
         return results
 
@@ -114,15 +113,7 @@ class SRCC:
         :param filter: either all [default], published, or unpublished
         :param sort: sort by newest, oldest, instant_answers
         '''
-
-        # Parameters must be dictionary
-        params = { 'sort': sort,
-                   'page': page,
-                   'filter':filter,
-                   'per_page': per_page }
-
-        articles = self.get('articles', params)
-        return articles
+        return self.get('articles', page=page, per_page=per_page, filter=filter, sort=sort)
 
 
     def get_tickets(self,per_page=500,filter="all",sort="newest",get_open=True,get_closed=True):
@@ -145,12 +136,11 @@ class SRCC:
  
         tickets = []
         for state in states:
-            params = {'sort': sort,
-                      'page': 1,
-                      'filter':filter,
-                      'per_page': per_page,
-                      'state':state }
+            res = self.get('tickets', sort=sort,
+                                      page=1,
+                                      filter=filter,
+                                      per_page=per_page,
+                                      state=state)
 
-            res = self.get('tickets', params)
             tickets = tickets + res
         return tickets
