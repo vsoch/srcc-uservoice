@@ -119,7 +119,10 @@ class SRCC:
         :param filter: either all [default], published, or unpublished
         :param sort: sort by newest, oldest, instant_answers
         '''
-        return self.get('articles', page=page, per_page=per_page, filter=filter, sort=sort)
+        return self.get('articles', page=page, 
+                                    per_page=per_page, 
+                                    filter=filter, 
+                                    sort=sort)
 
 
     def get_tickets(self,per_page=500,filter="all",sort="newest",get_open=True,get_closed=True):

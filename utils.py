@@ -10,16 +10,6 @@ import simplejson
 import json
 from gvars import *
 
-def get_custom_field(fields, key):
-   '''look for a key in a list of fields, each a dict
-   with key and value. Returns None if not found.'''
-   values = []
-   for field in fields:
-       if field['key'] == key:
-           values.append(field['value'])
-   if len(values) == 0:
-       return None
-   return values
 
 # General util / file functions
 def write_file(filename,content,mode="wb"):
